@@ -104,3 +104,22 @@ Click **"🎬 Load Demo Data"** in the sidebar to populate 3 sample SOS requests
 ---
 
 *Built for ASTRA 2026 Hackathon · Team Aurora · VIT Bhopal*
+
+
+---
+
+## 🎙️ Multilingual Voice SOS
+
+The Citizen SOS Portal supports voice messages in **Hindi, Gujarati, Marathi and English**.
+
+1. Install dependencies with `pip install -r requirements.txt`.
+2. Enable **Cloud Speech-to-Text** and **Cloud Translation API** in a Google Cloud project.
+3. Create a Google Cloud service account with permission to use both APIs and download its JSON key.
+4. Set `GOOGLE_APPLICATION_CREDENTIALS` to the absolute path of that key before starting Streamlit:
+   - PowerShell: `$env:GOOGLE_APPLICATION_CREDENTIALS="C:\\path\\to\\service-account.json"`
+   - macOS/Linux: `export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account.json"`
+5. Start the app with `streamlit run app.py`.
+
+In **Citizen SOS**, choose the spoken language, record the message, and select **Transcribe and translate voice**. Review the original transcript and English translation, then submit the SOS. The audio, language, original transcript and translation are saved in SQLite and displayed with audio playback in the **Command Centre**.
+
+**Privacy and deployment note:** voice recordings are stored in the local `rescue_link.db` database. Protect that database and your service-account key; do not commit credentials or real citizen recordings to Git. Google Cloud processing requires internet access and valid credentials; the rest of the SOS flow remains available if voice processing is not configured.
