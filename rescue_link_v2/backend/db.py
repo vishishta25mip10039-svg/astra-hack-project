@@ -76,6 +76,21 @@ def init_db():
     """)
 
     cur.execute("""
+        CREATE TABLE IF NOT EXISTS voice_notes (
+            id                  TEXT PRIMARY KEY,
+            request_id          TEXT,
+            created_at          TEXT NOT NULL,
+            language            TEXT NOT NULL,
+            language_code       TEXT NOT NULL,
+            original_transcript TEXT NOT NULL,
+            translated_text     TEXT NOT NULL,
+            mime_type           TEXT NOT NULL DEFAULT 'audio/wav',
+            audio_data          BLOB NOT NULL
+        )
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_voice_notes_request_id ON voice_notes(request_id)")
+
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS rescue_teams (
             id                  TEXT PRIMARY KEY,
             name                TEXT NOT NULL,

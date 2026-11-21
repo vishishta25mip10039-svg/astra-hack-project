@@ -12,6 +12,7 @@ from streamlit_folium import st_folium
 from backend.sos import get_all_requests, get_comm_logs
 from backend.rescue import get_teams, assign_team, update_rescue_status, get_recommended_teams
 from backend.db import seed_demo_data
+from backend.voice_service import get_voice_note_for_request
 from utils.helpers import (
     CATEGORIES, PRIORITY_COLORS, page_header, section_heading,
     status_badge_html, priority_badge, comm_badge, rescue_badge,
@@ -245,6 +246,16 @@ def show() -> None:
                 st.markdown(f"**Coordinates**: {selected['latitude']:.4f}°N, {selected['longitude']:.4f}°E")
                 if selected.get("description"):
                     st.markdown(f"**Field Details**: {selected['description']}")
+
+                voice_note = get_voice_note_for_request(selected["id"])
+                if voice_note:
+                    with st.expander("🎙️ Citizen voice message and translation", expanded=True):
+                        st.caption(f"Original language: {voice_note['language']} · Recorded: {voice_note['created_at'][:19].replace('T', ' ')} UTC")
+                        st.markdown("**Original transcript**")
+                        st.write(voice_note["original_transcript"])
+                        st.markdown("**English translation**")
+                        st.write(voice_note["translated_text"])
+                        st.audio(bytes(voice_note["audio_data"]), format=voice_note["mime_type"])
 
             # Nearest Team Recommendation (Slide 6 Step 5)
             with st.container(border=True):
