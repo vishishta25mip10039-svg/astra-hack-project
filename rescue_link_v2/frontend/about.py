@@ -1,135 +1,112 @@
-# ============================================================
-# MEMBER 2 — FRONTEND
-# FILE: frontend/about.py
-# PURPOSE: Project info, Domain 4 concepts, team credits
-# ============================================================
+"""Project overview, Slide alignment, architecture and team credentials."""
 
 import streamlit as st
+from utils.helpers import page_header, section_heading
 
 
-def show():
-    st.markdown("""
-    <div class="hero-banner">
-        <h1>ℹ️ About RESCUE LINK</h1>
-        <p>ASTRA 2026 · Domain 4: Satellite Communication, Navigation & Connectivity</p>
-    </div>
-    """, unsafe_allow_html=True)
+def show() -> None:
+    page_header(
+        "Mission, Architecture & Domain Alignment",
+        "ASTRA 2026: Space-Based Disaster Management & Satellite Communication.",
+        "TEAM AURORA · ANTERIX CLUB · VIT BHOPAL",
+    )
 
-    # ── What's simulated vs real ──────────────────────────────
-    st.subheader("🔬 What's Simulated vs Real")
-    s1, s2 = st.columns(2)
-    with s1:
-        st.markdown("""
-        <div style="background:#131B2E;border:1px solid #44BB44;border-radius:10px;padding:20px;">
-            <div style="color:#44BB44;font-weight:700;font-size:1.1rem;margin-bottom:12px;">
-                ✅ SIMULATED in this Demo
-            </div>
-            <ul style="color:#E8F4FD;line-height:1.9;margin:0;padding-left:1.2em;">
-                <li>Cellular / Internet / Satellite channel toggles</li>
-                <li>Store-and-forward queue (SQLite)</li>
-                <li>Satellite uplink sync trigger</li>
-                <li>Rescue team assignment workflow</li>
-                <li>Priority-based SOS routing</li>
-                <li>Real-time communication logs</li>
-                <li>Geographic incident mapping</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    with s2:
-        st.markdown("""
-        <div style="background:#131B2E;border:1px solid #FF4444;border-radius:10px;padding:20px;">
-            <div style="color:#FF4444;font-weight:700;font-size:1.1rem;margin-bottom:12px;">
-                🛰️ REAL System Would Use
-            </div>
-            <ul style="color:#E8F4FD;line-height:1.9;margin:0;padding-left:1.2em;">
-                <li>ISRO GSAT / IRNSS satellite uplink hardware</li>
-                <li>Low-Earth Orbit (LEO) satellite modems</li>
-                <li>Actual GPS NMEA data streams</li>
-                <li>DTMF-based satellite SMS encoding</li>
-                <li>NDMA / State Emergency Operation Centre APIs</li>
-                <li>Satellite ground station relay network</li>
-                <li>Encrypted military-grade comm protocols</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+    # Slide 2: Domain Alignment & Opportunity vs Gap
+    section_heading("Our Domains & The Gap We Fill (Slide 2)", "Bridging space infrastructure and ground-level disaster survival.")
+    left, right = st.columns(2, gap="large")
+    with left, st.container(border=True):
+        st.markdown("### 🛰️ The Space Opportunity")
+        st.markdown(
+            "- **ISRO's NavIC**: India has its own satellite constellation, independent of mobile towers.\n"
+            "- **26+ Disaster Types**: Cyclones, floods, landslides and earthquakes strike India yearly.\n"
+            "- **Resilient Satellite Links**: Ground mobile towers collapse within hours; satellites remain in orbit.\n"
+            "- **Untapped Ground SOS**: NDMA & ISRO have space infrastructure, but zero last-mile tools use it.\n"
+            "- **72-Hour Golden Window**: Satellite is the only reliable lifeline during critical survival hours."
+        )
+    with right, st.container(border=True):
+        st.markdown("### ❌ The Gap Rescue Link Fills")
+        st.markdown(
+            "- **No Offline Storage**: Existing tools fail instantly if internet drops; requests vanish.\n"
+            "- **No Intelligent Priority**: The loudest caller gets help, not the most critical casualty.\n"
+            "- **Zero Last-Mile Satellite Use**: Satellite connectivity has stayed on paper, never in citizen hands.\n"
+            "- **Requests Disappear**: No retry, no local buffer, no store-and-forward fallback.\n"
+            "- **Responders Flying Blind**: No live map, no triage queue, no visibility on who needs help where."
+        )
 
-    st.markdown("---")
+    # Slide 8: Ground Impact Comparison
+    section_heading("What Changes on the Ground (Slide 8)")
+    col_a, col_b = st.columns(2, gap="large")
+    with col_a, st.container(border=True):
+        st.markdown("### ❌ Without Rescue Link")
+        st.markdown(
+            "• **Network down** ➔ SOS request lost forever\n\n"
+            "• **No priority** ➔ Random, chaotic dispatch\n\n"
+            "• **Responders blind** ➔ No map, no queue, no data\n\n"
+            "• **Resource mismatch** ➔ 3 teams sent to one site, zero to another\n\n"
+            "• **No accountability** ➔ No records, no audit learning"
+        )
+    with col_b, st.container(border=True):
+        st.markdown("### ✅ With Rescue Link")
+        st.markdown(
+            "• **Offline queue** ➔ Zero data loss, ever (SQLite)\n\n"
+            "• **0–100 scoring** ➔ Critical first, always (Slide 7 Engine)\n\n"
+            "• **Live tactical map** ➔ Real-time geospatial incident visibility\n\n"
+            "• **Nearest team dispatch** ➔ Teams dispatched by proximity and severity\n\n"
+            "• **Full audit log** ➔ Cryptographic delivery receipts and analytics"
+        )
 
-    # ── Domain 4 concepts ─────────────────────────────────────
-    st.subheader("🛰️ Domain 4 Concepts Applied")
-    concepts = [
-        ("Store-and-Forward",
-         "Messages (SOS requests) are stored locally when no transmission channel is available "
-         "and forwarded automatically when a channel (satellite or terrestrial) becomes active."),
-        ("Multi-channel Fallback Hierarchy",
-         "The system prioritises Cellular → Internet → Satellite. When higher-priority channels "
-         "fail, it falls back to satellite — the last-resort long-range comm layer."),
-        ("Satellite Link Simulation",
-         "The 'Satellite' toggle simulates GSAT/INSAT store-and-forward behaviour. "
-         "In a real deployment, this maps to an actual LEO/GEO modem uplink."),
-        ("Offline Resilience",
-         "Citizens can still submit SOS even with zero connectivity. The system stores the request "
-         "in a local queue and synchronises when any channel is restored."),
-        ("Priority-Based Routing",
-         "Critical SOS (immediate danger or Critical severity) is flagged for urgent dispatch, "
-         "simulating emergency priority queuing in satellite comm protocols."),
+    # Slide 7 Priority Engine Reference
+    section_heading("Priority Engine Architecture (Slide 7)", "Algorithmic scoring formula evaluated in < 1 second.")
+    with st.container(border=True):
+        p1, p2, p3, p4 = st.columns(4)
+        with p1:
+            st.metric("Immediate Danger", "+40 pts", "Life-threatening hazard")
+        with p2:
+            st.metric("Medical Emergency", "+30 pts", "Severe injury or illness")
+        with p3:
+            st.metric("Mass Casualty", "+20 pts", "Multiple citizens trapped")
+        with p4:
+            st.metric("Comms Cut Off", "+10 pts", "Unable to self-rescue / no towers")
+        st.caption("Max Score: 100 ➔ Auto Critical. Tiers: Critical (70-100), High (40-69), Moderate (20-39), Low (0-19).")
+
+    # Future Roadmap (Slide 8) & Prototype Scope
+    section_heading("Prototype Scope & Future Roadmap (Slide 8)")
+    f1, f2 = st.columns(2, gap="large")
+    with f1, st.container(border=True):
+        st.markdown("**Implemented Prototype Features**")
+        st.markdown(
+            "- 3-Layer Communication Simulation (Cellular, Internet, Satellite Fallback)\n"
+            "- Local SQLite Store-and-Forward persistent queue\n"
+            "- Slide 7 Intelligent Triage Engine (0-100 real-time scoring)\n"
+            "- Tactical geospatial command map with proximity vectors\n"
+            "- Automated nearest-team dispatch calculation\n"
+            "- Official cryptographic Delivery Receipts with JSON export\n"
+            "- Mission analytics with zero data loss proof"
+        )
+    with f2, st.container(border=True):
+        st.markdown("**Future Production Roadmap**")
+        st.markdown(
+            "- **Live ISRO NavIC / GSAT API**: Direct transponder messaging hardware integration\n"
+            "- **SMS-based SOS**: Micro-packet delivery without mobile internet\n"
+            "- **NDMA Real-Time Data Feed**: National disaster management agency data sync\n"
+            "- **Starlink Direct-to-Cell Fallback**: Global low-earth-orbit constellation link\n"
+            "- **Field Mesh Networking**: LoRa / BLE peer-to-peer citizen hops"
+        )
+        st.caption("Presentation Note: Satellite connectivity is a software simulation in this prototype.")
+
+    # Team & Credentials
+    section_heading("Team Aurora · VIT Bhopal")
+    team_cols = st.columns(3)
+    team = [
+        ("Member 1", "Backend & Architecture", "Database schema, Slide 7 Priority Engine, Store-and-Forward sync"),
+        ("Member 2", "Frontend & Geospatial", "Streamlit UI, Tactical Leaflet map, live forms and delivery receipts"),
+        ("Member 3", "Integration & Pitch Demo", "Application routing, simulation presets, analytics and deployment"),
     ]
-    for title, desc in concepts:
-        with st.expander(f"📡 {title}"):
-            st.markdown(f"<p style='color:#E8F4FD;'>{desc}</p>", unsafe_allow_html=True)
+    for col, (member, role, responsibility) in zip(team_cols, team):
+        with col, st.container(border=True):
+            st.markdown(f"**{member}**")
+            st.caption(role)
+            st.write(responsibility)
 
-    st.markdown("---")
+    st.caption("ASTRA 2026 · ANTERiX Club · VIT Bhopal · Team Aurora")
 
-    # ── Tech stack ────────────────────────────────────────────
-    st.subheader("⚙️ Technology Stack")
-    tc1, tc2, tc3 = st.columns(3)
-    stacks = [
-        ("🐍 Backend", ["Python 3.11+", "SQLite (store-and-forward DB)", "uuid4 (SOS ID generation)", "datetime (UTC timestamps)"]),
-        ("🎨 Frontend", ["Streamlit (UI framework)", "Folium + streamlit-folium (map)", "Plotly Express (charts)", "Pandas (data display)"]),
-        ("🏗️ Architecture", ["MVC-inspired separation", "backend/ — logic layer", "frontend/ — page layer", "utils/ — shared helpers"]),
-    ]
-    for col, (title, items) in zip([tc1, tc2, tc3], stacks):
-        with col:
-            items_html = "".join(f"<li style='color:#E8F4FD;line-height:1.9;'>{i}</li>" for i in items)
-            st.markdown(f"""
-            <div style="background:#131B2E;border:1px solid #1E3A5F;border-radius:10px;padding:16px;">
-                <div style="color:#00D4FF;font-weight:700;margin-bottom:10px;">{title}</div>
-                <ul style="margin:0;padding-left:1.2em;">{items_html}</ul>
-            </div>
-            """, unsafe_allow_html=True)
-
-    st.markdown("---")
-
-    # ── Team credits ──────────────────────────────────────────
-    st.subheader("👨‍💻 Team Aurora")
-    tc = st.columns(3)
-    members = [
-        ("Member 1", "Backend Developer",
-         "DB schema · Channel engine · SOS logic · Rescue logic",
-         "backend/db.py · connectivity.py · sos.py · rescue.py"),
-        ("Member 2", "Frontend Developer",
-         "All 6 UI pages · Forms · Map · Charts · Badges",
-         "frontend/ (all 6 .py files)"),
-        ("Member 3", "Integration & Demo Lead",
-         "App entrypoint · Utils · Deployment · Testing · README",
-         "app.py · utils/helpers.py · requirements.txt"),
-    ]
-    for col, (name, role, work, files) in zip(tc, members):
-        with col:
-            st.markdown(f"""
-            <div style="background:#131B2E;border:1px solid #1E3A5F;border-radius:10px;
-                        padding:16px;text-align:center;">
-                <div style="font-size:2.5rem;">🧑‍💻</div>
-                <div style="color:#00D4FF;font-weight:700;font-size:1rem;">{name}</div>
-                <div style="color:#E8F4FD;font-size:0.85rem;margin:4px 0;">{role}</div>
-                <div style="color:#8BA4C8;font-size:0.78rem;margin-top:8px;">{work}</div>
-                <div style="color:#1E3A5F;font-size:0.72rem;margin-top:6px;font-style:italic;">{files}</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div style="text-align:center;color:#8BA4C8;margin-top:32px;font-size:0.85rem;">
-        Built for ASTRA 2026 · VIT Bhopal · Team Aurora<br>
-        Domain 4: Satellite Communication, Navigation & Connectivity
-    </div>
-    """, unsafe_allow_html=True)

@@ -1,137 +1,180 @@
-# ============================================================
-# MEMBER 2 — FRONTEND
-# FILE: frontend/connectivity_monitor.py
-# PURPOSE: Toggle channels, trigger sync, view comm logs
-# ============================================================
+"""Connectivity channel simulation, satellite telemetry and store-and-forward sync controls."""
 
-import streamlit as st
+import time
 import pandas as pd
-from backend.connectivity import get_state, set_state, sync_pending_requests, can_transmit
+import streamlit as st
+
+from backend.connectivity import (
+    get_state, set_state, sync_pending_requests, can_transmit,
+    apply_demo_preset, get_satellite_telemetry,
+)
 from backend.db import get_connection
+from backend.sos import get_all_requests
+from utils.helpers import page_header, section_heading, status_badge_html
 
 
-def show():
-    st.markdown("""
-    <div class="hero-banner">
-        <h1>📡 Connectivity Monitor</h1>
-        <p>Simulate satellite vs terrestrial channel states — core Domain 4 concept</p>
-    </div>
-    """, unsafe_allow_html=True)
+CHANNELS = [
+    ("Cellular Network", "PRIMARY LINK", "4G / 5G terrestrial telecom towers", "cellular"),
+    ("Internet / Wi-Fi", "PRIMARY LINK", "Broadband, fiber or local Wi-Fi data link", "internet"),
+    ("Satellite Link", "FALLBACK LINK", "Simulated ISRO NavIC / Starlink transponder (Domain 04)", "satellite"),
+]
+
+
+def show() -> None:
+    page_header(
+        "Connectivity & Satellite Link Simulation",
+        "Control communication channels, inspect simulated satellite telemetry and trigger Store-and-Forward sync.",
+        "ASTRA 2026 / DOMAIN 04 · SATELLITE CONNECTIVITY",
+    )
+
+    # Presentation disclaimer banner
+    st.info(
+        "🛰️ **Hackathon Presentation Detail**: Satellite connectivity is implemented as an accurate software simulation in this prototype, modeling ISRO NavIC (IRNSS) messaging and Starlink direct-to-device burst packet protocol."
+    )
+
+    # Fast 1-Click Preset Switcher for the 3.5 minute live demo
+    section_heading("Live Demo 1-Click Presets", "Quickly set channel conditions during your presentation.")
+    preset_cols = st.columns(3)
+    with preset_cols[0]:
+        if st.button("🟢 Scenario 1: Normal Comms", use_container_width=True, help="Cellular & Internet ON, Satellite OFF"):
+            apply_demo_preset("normal")
+            st.toast("Preset Applied: Terrestrial Normal Links Active", icon="🟢")
+            st.rerun()
+    with preset_cols[1]:
+        if st.button("🔴 Scenario 2: Network Blackout", use_container_width=True, help="All networks OFF — test offline local SQLite storage"):
+            apply_demo_preset("blackout")
+            st.toast("Preset Applied: Network Blackout Active", icon="🔴")
+            st.rerun()
+    with preset_cols[2]:
+        if st.button("🛰️ Scenario 3: Satellite Fallback", use_container_width=True, type="primary", help="Cellular/Internet OFF, Satellite ON — test burst sync"):
+            apply_demo_preset("satellite")
+            st.toast("Preset Applied: Satellite Fallback Active", icon="🛰️")
+            st.rerun()
 
     state = get_state()
+    section_heading("Manual Channel Configuration", "Toggle individual communication links and apply changes.")
+    with st.form("channel_settings_form"):
+        columns = st.columns(3, gap="medium")
+        values = {}
+        for col, (title, role_badge, description, key) in zip(columns, CHANNELS):
+            with col, st.container(border=True):
+                st.markdown(f"**{title}**")
+                st.markdown(f"`{role_badge}`")
+                st.caption(description)
+                values[key] = st.toggle(
+                    f"Enable {title}", value=bool(state[key]), key=f"channel_toggle_{key}"
+                )
+                current = "Active" if state[key] else "Unavailable / Severed"
+                badge_level = "low" if state[key] else "critical"
+                st.markdown(status_badge_html(current, badge_level), unsafe_allow_html=True)
+        apply = st.form_submit_button("Apply Channel Configuration", type="secondary", use_container_width=True)
 
-    # ── Channel Toggles ───────────────────────────────────────
-    st.subheader("🔌 Communication Channels")
-    col1, col2, col3 = st.columns(3)
+    if apply:
+        set_state(values["cellular"], values["internet"], values["satellite"])
+        st.success("Channel configuration updated.")
+        st.rerun()
 
-    with col1:
-        st.markdown("""
-        <div style="background:#131B2E;border:1px solid #1E3A5F;border-radius:10px;
-                    padding:16px;text-align:center;min-height:120px;">
-            <div style="font-size:2rem;">📶</div>
-            <div style="color:#00D4FF;font-weight:700;">Cellular Network</div>
-            <div style="color:#8BA4C8;font-size:0.82rem;margin-top:4px;">
-                4G/5G terrestrial coverage</div>
-        </div>
-        """, unsafe_allow_html=True)
-        cellular = st.toggle("Enable Cellular", value=bool(state["cellular"]), key="tog_cell")
-
-    with col2:
-        st.markdown("""
-        <div style="background:#131B2E;border:1px solid #1E3A5F;border-radius:10px;
-                    padding:16px;text-align:center;min-height:120px;">
-            <div style="font-size:2rem;">🌐</div>
-            <div style="color:#00D4FF;font-weight:700;">Internet / WiFi</div>
-            <div style="color:#8BA4C8;font-size:0.82rem;margin-top:4px;">
-                Broadband / WiFi uplink</div>
-        </div>
-        """, unsafe_allow_html=True)
-        internet = st.toggle("Enable Internet", value=bool(state["internet"]), key="tog_net")
-
-    with col3:
-        st.markdown("""
-        <div style="background:#131B2E;border:1px solid #1E3A5F;border-radius:10px;
-                    padding:16px;text-align:center;min-height:120px;">
-            <div style="font-size:2rem;">🛰️</div>
-            <div style="color:#00D4FF;font-weight:700;">Satellite Link</div>
-            <div style="color:#8BA4C8;font-size:0.82rem;margin-top:4px;">
-                ISRO/GSAT store-and-forward</div>
-        </div>
-        """, unsafe_allow_html=True)
-        satellite = st.toggle("Enable Satellite", value=bool(state["satellite"]), key="tog_sat")
-
-    # ── Apply + Sync buttons ──────────────────────────────────
-    bc1, bc2 = st.columns(2)
-    with bc1:
-        if st.button("💾 Apply Channel Settings", use_container_width=True):
-            set_state(cellular, internet, satellite)
-            st.success("Channel state updated.")
-            st.rerun()
-    with bc2:
-        if st.button("🔄 Sync Pending Requests Now", use_container_width=True):
-            count, msg = sync_pending_requests()
-            if count > 0:
-                st.success(msg)
-            else:
-                st.warning(msg)
-            st.rerun()
-
-    # ── Live status ───────────────────────────────────────────
     can_send, channel = can_transmit()
-    color = "#44BB44" if can_send else "#FF4444"
-    icon  = "🟢" if can_send else "🔴"
-    st.markdown(f"""
-    <div style="background:#131B2E;border:2px solid {color};border-radius:10px;
-                padding:16px 24px;margin:16px 0;text-align:center;">
-        <div style="font-size:1.1rem;font-weight:700;color:{color};">
-            {icon} Transmission Status:
-            {"ONLINE via " + channel.upper() if can_send else "OFFLINE — All channels down"}
-        </div>
-        <div style="color:#8BA4C8;margin-top:4px;font-size:0.85rem;">
-            {"SOS submissions will be synchronised immediately." if can_send
-             else "SOS submissions will be stored locally (store-and-forward mode)."}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    pending_requests = get_all_requests({"comm_status": "pending"})
+    pending_count = len(pending_requests)
+    telemetry = get_satellite_telemetry()
 
-    # ── Global comm log ───────────────────────────────────────
-    st.subheader("📋 All Communication Logs")
-    conn = get_connection()
-    logs = conn.execute("""
+    st.markdown("")
+    status_col, queue_col = st.columns([1.25, 0.75], gap="large")
+
+    with status_col, st.container(border=True):
+        section_heading("Active Transmission Route")
+        if can_send:
+            route_name = "Satellite Simulation (NavIC / Starlink Protocol)" if channel == "satellite_sim" else "Terrestrial Cellular / Internet"
+            st.markdown(
+                f"{status_badge_html('Uplink Online', 'low')} "
+                f"<span style='color:#203244;font-size:14px;font-weight:700;margin-left:8px'>{route_name}</span>",
+                unsafe_allow_html=True,
+            )
+            st.caption("New SOS requests will be transmitted and verified immediately.")
+        else:
+            st.markdown(
+                f"{status_badge_html('Network Blackout', 'critical')} "
+                f"<span style='color:#C84D50;font-size:14px;font-weight:700;margin-left:8px'>No Ground or Satellite Channel</span>",
+                unsafe_allow_html=True,
+            )
+            st.caption("Store-and-Forward Active: New requests are securely queued in local SQLite.")
+
+        # Satellite Telemetry Card
+        st.markdown(
+            f"""
+            <div style="background:#F6FAFC;border:1px solid #DCE5EC;border-radius:9px;padding:12px;margin-top:12px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:10px;font-weight:800;color:#576E82;letter-spacing:.08em;text-transform:uppercase">
+                  🛰️ Domain 04 Satellite Telemetry Feed
+                </span>
+                {status_badge_html('Transponder Ready' if telemetry['active'] else 'Transponder Standby', 'low' if telemetry['active'] else 'moderate')}
+              </div>
+              <div class="rl-telemetry-grid">
+                <div class="rl-telemetry-stat">
+                  <div class="rl-telemetry-label">Constellation</div>
+                  <div class="rl-telemetry-val" style="font-size:11px">NavIC & Starlink Sim</div>
+                </div>
+                <div class="rl-telemetry-stat">
+                  <div class="rl-telemetry-label">RF Carrier</div>
+                  <div class="rl-telemetry-val" style="font-size:11px">S-Band (2.49 GHz)</div>
+                </div>
+                <div class="rl-telemetry-stat">
+                  <div class="rl-telemetry-label">Simulated Ping</div>
+                  <div class="rl-telemetry-val" style="font-size:11px">{telemetry['simulated_latency_ms']} ms</div>
+                </div>
+                <div class="rl-telemetry-stat">
+                  <div class="rl-telemetry-label">Packet Integrity</div>
+                  <div class="rl-telemetry-val" style="font-size:11px">100% CRC32</div>
+                </div>
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with queue_col, st.container(border=True):
+        section_heading("Store-and-Forward Queue")
+        st.metric("Requests Awaiting Sync", pending_count)
+        if pending_count > 0:
+            st.caption("Requests safely held in local SQLite buffer.")
+            for req in pending_requests[:3]:
+                st.caption(f"• `{req['id']}` · {req['category']} ({req['people_affected']} people)")
+            if pending_count > 3:
+                st.caption(f"... and {pending_count - 3} more queued")
+        else:
+            st.caption("Queue is clear. 100% of recorded incidents have been synchronised.")
+
+        sync_btn = st.button("⚡ Synchronise Pending Queue", type="primary", use_container_width=True)
+        if sync_btn:
+            if not can_send:
+                st.error("Cannot sync: No communication channel is active. Enable Satellite or Cellular first!")
+            else:
+                with st.spinner("Initiating burst uplink packet transmission..."):
+                    time.sleep(0.5)
+                    count, message = sync_pending_requests()
+                if count:
+                    st.success(message)
+                else:
+                    st.warning(message)
+                st.rerun()
+
+    section_heading("Communication & Transmission History", "Audit log of all transmission events.")
+    connection = get_connection()
+    logs = connection.execute(
+        """
         SELECT cl.timestamp, cl.request_id, cl.event, cl.channel, cl.notes
         FROM comm_logs cl
-        ORDER BY cl.timestamp DESC
+        ORDER BY cl.timestamp DESC, cl.id DESC
         LIMIT 100
-    """).fetchall()
-    conn.close()
+        """
+    ).fetchall()
+    connection.close()
 
     if logs:
-        df = pd.DataFrame([dict(r) for r in logs])
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        frame = pd.DataFrame([dict(row) for row in logs])
+        frame.columns = ["Timestamp", "Request ID", "Event", "Channel", "Notes"]
+        st.dataframe(frame, use_container_width=True, hide_index=True)
     else:
-        st.info("No communication events recorded yet.")
+        st.info("No communication events have been recorded yet.")
 
-    # ── Scenario explainer ────────────────────────────────────
-    st.markdown("---")
-    st.subheader("💡 Demo Scenarios")
-    s1, s2, s3 = st.columns(3)
-    scenarios = [
-        ("🌊 Flood / Disaster Zone", "Turn OFF cellular + internet → Submit SOS → "
-         "Turn ON satellite → Click Sync → Watch pending → synchronised",
-         "Simulates remote disaster where only satellite is available."),
-        ("🏙️ Urban Emergency", "Keep cellular ON → Submit SOS → "
-         "It immediately synchronises via cellular network.",
-         "Simulates normal city connectivity."),
-        ("📡 Satellite-Only Rescue", "Turn OFF everything → Submit multiple SOS → "
-         "Enable satellite only → Sync → All flush via GSAT.",
-         "Full Domain 4 store-and-forward demonstration."),
-    ]
-    for col, (title, steps, note) in zip([s1, s2, s3], scenarios):
-        with col:
-            st.markdown(f"""
-            <div style="background:#131B2E;border:1px solid #1E3A5F;border-radius:10px;padding:14px;">
-                <div style="color:#00D4FF;font-weight:700;margin-bottom:8px;">{title}</div>
-                <div style="color:#E8F4FD;font-size:0.82rem;margin-bottom:8px;">{steps}</div>
-                <div style="color:#8BA4C8;font-size:0.78rem;font-style:italic;">{note}</div>
-            </div>
-            """, unsafe_allow_html=True)
