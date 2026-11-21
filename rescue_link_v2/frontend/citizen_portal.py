@@ -246,7 +246,7 @@ def show() -> None:
                 if voice_result:
                     translated_details = voice_result["translated_text"].strip()
                     incident_description = (
-                        incident_description + "\\n\\nVoice message (English translation): " + translated_details
+                        incident_description + "\n\nVoice message (English translation): " + translated_details
                         if incident_description else "Voice message (English translation): " + translated_details
                     )
                 result = create_sos(
