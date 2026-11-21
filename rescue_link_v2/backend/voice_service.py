@@ -9,6 +9,7 @@ from datetime import datetime
 from io import BytesIO
 import uuid
 import wave
+import sqlite3
 
 from backend.db import get_connection
 
