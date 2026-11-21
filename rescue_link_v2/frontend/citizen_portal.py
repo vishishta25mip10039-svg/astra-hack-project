@@ -6,6 +6,7 @@ from datetime import datetime
 
 from backend.sos import create_sos, get_all_requests, get_comm_logs, calculate_priority_score
 from backend.connectivity import can_transmit
+from backend.voice_service import transcribe_and_translate, save_voice_note, attach_voice_note, SUPPORTED_LANGUAGES
 from utils.helpers import (
     CATEGORIES, SEVERITIES, validate_coordinates,
     page_header, section_heading, status_badge_html,
@@ -190,6 +191,48 @@ def show() -> None:
                     format="%.4f", step=0.0001, key="citizen_longitude",
                 )
 
+            st.markdown("**🎙️ Voice SOS (Hindi / Gujarati / Marathi / English)**")
+            st.caption("Record the emergency in your own language. The system keeps the original audio and transcript, then prepares an English translation for responders.")
+            voice_language = st.selectbox(
+                "Spoken language",
+                list(SUPPORTED_LANGUAGES.keys()),
+                key="voice_language",
+            )
+            voice_audio = st.audio_input(
+                "Record your emergency message",
+                sample_rate=16000,
+                key="voice_sos_audio",
+            )
+            if st.button("Transcribe and translate voice", key="voice_transcribe", use_container_width=True):
+                if voice_audio is None:
+                    st.warning("Record a voice message first.")
+                else:
+                    try:
+                        with st.spinner("Transcribing and translating your message..."):
+                            audio_bytes = voice_audio.getvalue()
+                            voice_result = transcribe_and_translate(audio_bytes, voice_language)
+                            note_id = save_voice_note(
+                                audio_bytes,
+                                voice_result,
+                                getattr(voice_audio, "type", None) or "audio/wav",
+                            )
+                            st.session_state["voice_result"] = voice_result
+                            st.session_state["voice_note_id"] = note_id
+                        st.success("Voice message processed and saved. Review the transcript below, then submit the SOS.")
+                    except Exception as exc:
+                        st.error(str(exc))
+
+            voice_result = st.session_state.get("voice_result")
+            if voice_result:
+                with st.expander("Review voice transcript and English translation", expanded=True):
+                    st.caption(f"Input language: {voice_result['language']}")
+                    st.markdown("**Original transcript**")
+                    st.write(voice_result["transcript"])
+                    st.markdown("**English translation for responders**")
+                    st.write(voice_result["translated_text"])
+                    if voice_audio is not None:
+                        st.audio(voice_audio)
+
             submitted = st.button("Transmit SOS Request", type="primary", use_container_width=True)
 
         if submitted:
@@ -198,6 +241,14 @@ def show() -> None:
             if not valid:
                 st.error(error)
             else:
+                voice_result = st.session_state.get("voice_result")
+                incident_description = description.strip()
+                if voice_result:
+                    translated_details = voice_result["translated_text"].strip()
+                    incident_description = (
+                        incident_description + "\\n\\nVoice message (English translation): " + translated_details
+                        if incident_description else "Voice message (English translation): " + translated_details
+                    )
                 result = create_sos(
                     category=category,
                     latitude=latitude,
@@ -205,10 +256,15 @@ def show() -> None:
                     people_affected=people,
                     severity=severity,
                     immediate_danger=danger,
-                    description=description,
+                    description=incident_description,
                     is_medical=is_medical,
                     comm_cutoff=comm_cutoff,
                 )
+                note_id = st.session_state.get("voice_note_id")
+                if note_id:
+                    attach_voice_note(note_id, result["id"])
+                    st.session_state.pop("voice_note_id", None)
+                    st.session_state.pop("voice_result", None)
                 st.session_state["last_sos_result"] = result
                 st.session_state["last_sos_category"] = category
                 st.rerun()
