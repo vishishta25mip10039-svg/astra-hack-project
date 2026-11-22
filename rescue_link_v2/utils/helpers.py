@@ -7,20 +7,20 @@ import streamlit as st
 
 
 COLORS = {
-    "background": "#070B14",
-    "surface": "#0E1626",
-    "text": "#F1F5F9",
-    "muted": "#94A3B8",
-    "brand": "#38BDF8",
-    "brand_hover": "#0EA5E9",
-    "navy": "#0A0F1D",
-    "navy_light": "#131E30",
-    "cyan": "#38BDF8",
-    "border": "#1E2D42",
-    "critical": "#EF4444",
-    "high": "#F97316",
-    "moderate": "#EAB308",
-    "low": "#10B981",
+    "background": "#F2EFE6",
+    "surface": "#F2EFE6",
+    "text": "#182B36",
+    "muted": "#182B36",
+    "brand": "#182B36",
+    "brand_hover": "#182B36",
+    "navy": "#182B36",
+    "navy_light": "#182B36",
+    "cyan": "#182B36",
+    "border": "#182B36",
+    "critical": "#182B36",
+    "high": "#182B36",
+    "moderate": "#182B36",
+    "low": "#182B36",
 }
 
 PRIORITY_COLORS = {
@@ -31,10 +31,10 @@ PRIORITY_COLORS = {
 }
 
 PRIORITY_SOFT_COLORS = {
-    "critical": ("#3F1215", "#FCA5A5"),
-    "high": ("#3D1D0B", "#FDBA74"),
-    "moderate": ("#382908", "#FDE047"),
-    "low": ("#0B3828", "#6EE7B7"),
+    "critical": ("#F2EFE6", "#182B36"),
+    "high": ("#F2EFE6", "#182B36"),
+    "moderate": ("#F2EFE6", "#182B36"),
+    "low": ("#F2EFE6", "#182B36"),
 }
 
 COMM_STATUS_BADGE = {
@@ -450,6 +450,69 @@ def apply_theme() -> None:
     )
 
 
+
+    # Two-colour paper-and-ink visual override. Kept separate to preserve page helpers.
+    st.markdown(
+        """
+        <style>
+        :root, html, body { color-scheme: light !important; --rl-paper:#F2EFE6; --rl-ink:#182B36; }
+        html, body, [class*="css"] { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important; color:#182B36 !important; }
+        [data-testid="stAppViewContainer"], [data-testid="stMain"], [data-testid="stMainBlockContainer"] { background:#F2EFE6 !important; color:#182B36 !important; }
+        [data-testid="stHeader"] { background:#F2EFE6 !important; border-bottom:1px solid rgba(24,43,54,.16) !important; }
+        [data-testid="stMainBlockContainer"] { max-width:1460px; padding-top:1.5rem; padding-bottom:3rem; }
+        [data-testid="stSidebar"], [data-testid="stSidebar"] > div:first-child { background:#182B36 !important; border-right:1px solid #182B36 !important; }
+        [data-testid="stSidebar"] > div:first-child { padding:1.2rem .95rem 1rem; }
+        [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] [data-testid="stCaptionContainer"], [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] { color:#F2EFE6 !important; }
+        [data-testid="stSidebar"] hr { border-color:rgba(242,239,230,.22) !important; }
+        .rl-brand-mark { background:#F2EFE6 !important; color:#182B36 !important; border:1px solid #F2EFE6 !important; box-shadow:none !important; border-radius:6px !important; }
+        .rl-brand-name { color:#F2EFE6 !important; }
+        .rl-brand-subtitle, .rl-sidebar-label, .rl-sidebar-footer, .rl-footer-location { color:rgba(242,239,230,.72) !important; }
+        .rl-footer-dot { background:#F2EFE6 !important; box-shadow:none !important; }
+        .rl-sidebar-status { background:rgba(242,239,230,.07) !important; border:1px solid rgba(242,239,230,.28) !important; border-radius:6px !important; }
+        .rl-sidebar-status-title { color:rgba(242,239,230,.65) !important; }
+        .rl-sidebar-status-row, .rl-sidebar-status-value { color:#F2EFE6 !important; }
+        [data-testid="stSidebar"] [role="radiogroup"] label { color:rgba(242,239,230,.82) !important; border-radius:5px !important; }
+        [data-testid="stSidebar"] [role="radiogroup"] label:hover { background:rgba(242,239,230,.10) !important; color:#F2EFE6 !important; }
+        [data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) { background:#F2EFE6 !important; color:#182B36 !important; box-shadow:inset 3px 0 0 #182B36 !important; }
+        [data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) * { color:#182B36 !important; }
+        h1,h2,h3,h4,p,li,label { color:#182B36 !important; }
+        small, [data-testid="stCaptionContainer"], [data-testid="stMetricLabel"], .rl-section-note { color:rgba(24,43,54,.72) !important; }
+        hr { border-color:rgba(24,43,54,.22) !important; }
+        [data-testid="stVerticalBlockBorderWrapper"], [data-testid="stExpander"] { background:#F2EFE6 !important; border:1px solid rgba(24,43,54,.28) !important; border-radius:6px !important; box-shadow:none !important; backdrop-filter:none !important; }
+        [data-testid="stMetricValue"] { color:#182B36 !important; font-weight:760 !important; }
+        .rl-page-header { background:#182B36 !important; border:1px solid #182B36 !important; border-radius:4px !important; box-shadow:none !important; }
+        .rl-page-header:before, .rl-page-header:after { display:none !important; }
+        .rl-page-eyebrow { color:rgba(242,239,230,.72) !important; text-shadow:none !important; }
+        .rl-page-title, .rl-page-subtitle { color:#F2EFE6 !important; }
+        .rl-orbit-art { opacity:.18 !important; }
+        .rl-section-title { color:#182B36 !important; }
+        .rl-status, .rl-triage-pill, .rl-triage-chip { background:#F2EFE6 !important; color:#182B36 !important; border:1px solid rgba(24,43,54,.42) !important; box-shadow:none !important; border-radius:4px !important; }
+        .rl-triage-box, .rl-receipt-card, .rl-telemetry-stat, .rl-network-card, .rl-empty-state { background:#F2EFE6 !important; color:#182B36 !important; border:1px solid rgba(24,43,54,.28) !important; border-radius:6px !important; box-shadow:none !important; }
+        .rl-receipt-seal { color:#182B36 !important; border-color:#182B36 !important; background:#F2EFE6 !important; }
+        .rl-network-label, .rl-telemetry-label { color:rgba(24,43,54,.68) !important; }
+        .rl-network-name, .rl-empty-title, .rl-empty-copy, .rl-incident-title, .rl-incident-meta, .rl-step-title, .rl-step-copy, .rl-telemetry-val { color:#182B36 !important; }
+        .rl-incident-line, .rl-step { border-color:rgba(24,43,54,.18) !important; }
+        .stButton > button, .stDownloadButton > button { background:#F2EFE6 !important; color:#182B36 !important; border:1px solid #182B36 !important; border-radius:5px !important; box-shadow:none !important; }
+        .stButton > button:hover, .stDownloadButton > button:hover { background:#182B36 !important; color:#F2EFE6 !important; border-color:#182B36 !important; }
+        button[kind="primary"], button[data-testid="baseButton-primary"], button[data-testid="stBaseButton-primary"], [data-testid="stFormSubmitButton"] button, .stFormSubmitButton button { background:#182B36 !important; color:#F2EFE6 !important; border:1px solid #182B36 !important; box-shadow:none !important; border-radius:5px !important; }
+        button[kind="primary"]:hover, button[data-testid="baseButton-primary"]:hover, button[data-testid="stBaseButton-primary"]:hover, [data-testid="stFormSubmitButton"] button:hover, .stFormSubmitButton button:hover { background:#F2EFE6 !important; color:#182B36 !important; }
+        [data-testid="stSidebar"] .stButton > button { background:transparent !important; color:#F2EFE6 !important; border:1px solid rgba(242,239,230,.42) !important; }
+        [data-testid="stSidebar"] .stButton > button:hover { background:#F2EFE6 !important; color:#182B36 !important; }
+        [data-baseweb="select"] > div, [data-baseweb="input"] > div, [data-baseweb="textarea"] > div, [data-baseweb="base-input"], [data-testid="stSelectbox"] [data-baseweb="select"] > div, [data-testid="stNumberInput"] [data-baseweb="input"] > div, [data-testid="stTextInput"] [data-baseweb="input"] > div, [data-testid="stTextArea"] [data-baseweb="textarea"] > div { background:#F2EFE6 !important; color:#182B36 !important; border:1px solid rgba(24,43,54,.48) !important; border-radius:5px !important; box-shadow:none !important; }
+        [data-baseweb="select"] *, [data-baseweb="input"] *, [data-baseweb="textarea"] *, [data-testid="stWidgetLabel"] p, [data-testid="stWidgetLabel"] label { color:#182B36 !important; -webkit-text-fill-color:#182B36 !important; }
+        [data-baseweb="popover"], [data-baseweb="popover"] [role="listbox"], [data-baseweb="popover"] [role="option"] { background:#F2EFE6 !important; color:#182B36 !important; }
+        input[type="checkbox"] { accent-color:#182B36 !important; }
+        [data-testid="stAlert"] { background:#F2EFE6 !important; color:#182B36 !important; border:1px solid #182B36 !important; border-left:3px solid #182B36 !important; border-radius:5px !important; }
+        [data-testid="stAlert"] p, [data-testid="stAlert"] span, [data-testid="stAlert"] div, [data-testid="stAlert"] svg { color:#182B36 !important; fill:#182B36 !important; }
+        [data-testid="stDataFrame"], [data-testid="stTable"] { background:#F2EFE6 !important; border:1px solid rgba(24,43,54,.35) !important; border-radius:5px !important; }
+        [data-testid="stFolium"] iframe { border:1px solid rgba(24,43,54,.35) !important; border-radius:5px !important; }
+        [data-testid="stDecoration"] { display:none !important; }
+        @media(max-width:760px) { [data-testid="stMainBlockContainer"] { padding:1rem 1rem 2rem; } .rl-page-title { font-size:22px !important; } .rl-orbit-art { opacity:.10 !important; } }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
 def page_header(title: str, subtitle: Optional[str] = None,
                 eyebrow: Optional[str] = None) -> None:
     """Render a mission-style page header with a subtle orbital illustration."""
@@ -465,15 +528,15 @@ def page_header(title: str, subtitle: Optional[str] = None,
           </div>
           <div class="rl-orbit-art" aria-hidden="true">
             <svg viewBox="0 0 230 135" role="presentation">
-              <ellipse cx="126" cy="67" rx="91" ry="34" fill="none" stroke="#38BDF8" stroke-opacity=".50" stroke-width="1.2" transform="rotate(-19 126 67)"/>
-              <ellipse cx="126" cy="67" rx="72" ry="55" fill="none" stroke="#38BDF8" stroke-opacity=".24" stroke-width="1" transform="rotate(31 126 67)"/>
-              <circle cx="126" cy="67" r="22" fill="#0284C7" fill-opacity=".15" stroke="#38BDF8" stroke-opacity=".7"/>
-              <path d="M113 67h26M126 54v26" stroke="#38BDF8" stroke-opacity=".65" stroke-width=".8"/>
-              <circle cx="49" cy="42" r="3.5" fill="#7DD3FC"/>
-              <circle cx="197" cy="84" r="4" fill="#38BDF8"/>
-              <circle cx="126" cy="67" r="4" fill="#BAE6FD"/>
-              <path d="M188 22l2 4 4 2-4 2-2 4-2-4-4-2 4-2z" fill="#7DD3FC" fill-opacity=".8"/>
-              <path d="M66 99l1.5 3 3 1.5-3 1.5-1.5 3-1.5-3-3-1.5 3-1.5z" fill="#7DD3FC" fill-opacity=".55"/>
+              <ellipse cx="126" cy="67" rx="91" ry="34" fill="none" stroke="#F2EFE6" stroke-opacity=".50" stroke-width="1.2" transform="rotate(-19 126 67)"/>
+              <ellipse cx="126" cy="67" rx="72" ry="55" fill="none" stroke="#F2EFE6" stroke-opacity=".24" stroke-width="1" transform="rotate(31 126 67)"/>
+              <circle cx="126" cy="67" r="22" fill="#F2EFE6" fill-opacity=".15" stroke="#F2EFE6" stroke-opacity=".7"/>
+              <path d="M113 67h26M126 54v26" stroke="#F2EFE6" stroke-opacity=".65" stroke-width=".8"/>
+              <circle cx="49" cy="42" r="3.5" fill="#F2EFE6"/>
+              <circle cx="197" cy="84" r="4" fill="#F2EFE6"/>
+              <circle cx="126" cy="67" r="4" fill="#F2EFE6"/>
+              <path d="M188 22l2 4 4 2-4 2-2 4-2-4-4-2 4-2z" fill="#F2EFE6" fill-opacity=".8"/>
+              <path d="M66 99l1.5 3 3 1.5-3 1.5-1.5 3-1.5-3-3-1.5 3-1.5z" fill="#F2EFE6" fill-opacity=".55"/>
             </svg>
           </div>
         </div>
