@@ -89,6 +89,50 @@ def _build_attention_queue(requests: list) -> list:
     return attention_items
 
 
+
+def _render_attention_row(item: dict) -> None:
+    """Render one actionable incident with a direct jump to dispatch review."""
+    request = item["request"]
+    request_id = str(request.get("id", "Unknown request"))
+    category = str(request.get("category", "Emergency"))
+    priority = str(request.get("priority", "low")).upper()
+    score = item["score"]
+    people = int(request.get("people_affected") or 1)
+    reason_text = " · ".join(item["reasons"])
+
+    with st.container(border=True):
+        info_col, action_col = st.columns([5, 1])
+        with info_col:
+            st.markdown(f"**{request_id} · {category}**")
+            st.caption(
+                f"{priority} · {score}/100 · {people} "
+                f"{'person' if people == 1 else 'people'} affected"
+            )
+            st.markdown(f"**Action:** {reason_text}")
+            st.caption(
+                f"Transmission: {comm_badge(request.get('comm_status', 'pending'))}"
+                f"  |  Response: {rescue_badge(request.get('rescue_status', 'open'))}"
+            )
+        with action_col:
+            if st.button(
+                "Review",
+                key=f"cc_attention_review_{request_id}",
+                use_container_width=True,
+            ):
+                # Clear filters so the incident is visible in the dispatch
+                # panel even if a map filter had hidden it.
+                for filter_key in (
+                    "cc_category", "cc_priority", "cc_comm", "cc_rescue"
+                ):
+                    st.session_state[filter_key] = "All"
+
+                st.session_state["cc_selected_request_id"] = request_id
+                st.session_state["cc_incident_picker"] = (
+                    f"{request_id} · {score}pts ({priority}) - {category}"
+                )
+                st.rerun()
+
+
 def _render_attention_queue(all_requests: list) -> None:
     """Render a cross-filter Needs attention queue with direct incident review."""
     items = _build_attention_queue(all_requests)
@@ -120,53 +164,16 @@ def _render_attention_queue(all_requests: list) -> None:
             )
         return
 
+
     visible_items = items[:6]
     for item in visible_items:
-        request = item["request"]
-        request_id = str(request.get("id", "Unknown request"))
-        category = str(request.get("category", "Emergency"))
-        priority = str(request.get("priority", "low")).upper()
-        score = item["score"]
-        people = int(request.get("people_affected") or 1)
-        reason_text = " · ".join(item["reasons"])
-
-        with st.container(border=True):
-            info_col, action_col = st.columns([5, 1])
-            with info_col:
-                st.markdown(f"**{request_id} · {category}**")
-                st.caption(
-                    f"{priority} · {score}/100 · {people} "
-                    f"{'person' if people == 1 else 'people'} affected"
-                )
-                st.markdown(f"**Action:** {reason_text}")
-                st.caption(
-                    f"Transmission: {comm_badge(request.get('comm_status', 'pending'))}"
-                    f"  |  Response: {rescue_badge(request.get('rescue_status', 'open'))}"
-                )
-            with action_col:
-                if st.button(
-                    "Review",
-                    key=f"cc_attention_review_{request_id}",
-                    use_container_width=True,
-                ):
-                    # Clear filters so the incident is visible in the
-                    # dispatch panel even if a map filter had hidden it.
-                    for filter_key in (
-                        "cc_category", "cc_priority", "cc_comm", "cc_rescue"
-                    ):
-                        st.session_state[filter_key] = "All"
-
-                    st.session_state["cc_selected_request_id"] = request_id
-                    st.session_state["cc_incident_picker"] = (
-                        f"{request_id} · {score}pts ({priority}) - {category}"
-                    )
-                    st.rerun()
+        _render_attention_row(item)
 
     if len(items) > len(visible_items):
-        st.caption(
-            f"Showing the {len(visible_items)} most urgent items of {len(items)}. "
-            "Resolve or assign incidents to clear them from this queue."
-        )
+        remaining_items = items[len(visible_items):]
+        with st.expander(f"Show {len(remaining_items)} more attention items"):
+            for item in remaining_items:
+                _render_attention_row(item)
 
 
 def _build_tactical_map(requests: list, teams: list, selected_req: dict = None, nearest_team: dict = None) -> folium.Map:
