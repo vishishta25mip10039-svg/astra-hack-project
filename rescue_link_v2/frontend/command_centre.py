@@ -21,6 +21,153 @@ from utils.helpers import (
 RESCUE_STATUSES = ["open", "assigned", "in_progress", "resolved"]
 
 
+
+def _build_attention_queue(requests: list) -> list:
+    """Return unresolved incidents that currently need an operator action.
+
+    This list is independent of Command Centre filters so pending or
+    unassigned incidents cannot be hidden by the map filter.
+    """
+    attention_items = []
+
+    for request in requests:
+        rescue_status = str(request.get("rescue_status", "open")).lower()
+        comm_status = str(request.get("comm_status", "pending")).lower()
+        priority = str(request.get("priority", "low")).lower()
+        assigned_team = request.get("assigned_team")
+        score = int(request.get("priority_score") or 0)
+
+        if rescue_status == "resolved":
+            continue
+
+        is_unassigned = rescue_status == "open" and not assigned_team
+        is_pending = comm_status == "pending"
+        reasons = []
+
+        if is_pending:
+            reasons.append("Awaiting transmission")
+
+        if is_unassigned:
+            if priority == "critical":
+                reasons.append("Critical incident · no team assigned")
+            elif priority == "high":
+                reasons.append("High-priority incident · no team assigned")
+            else:
+                reasons.append("No rescue team assigned")
+
+        if not reasons:
+            continue
+
+        if is_unassigned and priority == "critical":
+            urgency = 0
+        elif is_pending and priority == "critical":
+            urgency = 1
+        elif is_pending:
+            urgency = 2
+        elif is_unassigned and priority == "high":
+            urgency = 3
+        else:
+            urgency = 4
+
+        attention_items.append({
+            "request": request,
+            "reasons": reasons,
+            "urgency": urgency,
+            "score": score,
+            "is_pending": is_pending,
+            "is_unassigned": is_unassigned,
+        })
+
+    attention_items.sort(
+        key=lambda item: (
+            item["urgency"],
+            -item["score"],
+            str(item["request"].get("created_at") or ""),
+        )
+    )
+    return attention_items
+
+
+def _render_attention_queue(all_requests: list) -> None:
+    """Render a cross-filter Needs attention queue with direct incident review."""
+    items = _build_attention_queue(all_requests)
+    pending_count = sum(item["is_pending"] for item in items)
+    unassigned_count = sum(item["is_unassigned"] for item in items)
+    critical_count = sum(
+        item["is_unassigned"]
+        and str(item["request"].get("priority", "")).lower() == "critical"
+        for item in items
+    )
+
+    section_heading(
+        "Needs attention",
+        "Incidents requiring an operator action. This list is not affected by map filters.",
+    )
+
+    metric_cols = st.columns(4)
+    metric_cols[0].metric("Needs attention", len(items))
+    metric_cols[1].metric("Awaiting transmission", pending_count)
+    metric_cols[2].metric("Unassigned", unassigned_count)
+    metric_cols[3].metric("Critical · unassigned", critical_count)
+
+    if not items:
+        with st.container(border=True):
+            st.markdown("**Nothing needs attention right now.**")
+            st.caption(
+                "There are no unresolved incidents waiting for transmission "
+                "or a rescue team assignment."
+            )
+        return
+
+    visible_items = items[:6]
+    for item in visible_items:
+        request = item["request"]
+        request_id = str(request.get("id", "Unknown request"))
+        category = str(request.get("category", "Emergency"))
+        priority = str(request.get("priority", "low")).upper()
+        score = item["score"]
+        people = int(request.get("people_affected") or 1)
+        reason_text = " · ".join(item["reasons"])
+
+        with st.container(border=True):
+            info_col, action_col = st.columns([5, 1])
+            with info_col:
+                st.markdown(f"**{request_id} · {category}**")
+                st.caption(
+                    f"{priority} · {score}/100 · {people} "
+                    f"{'person' if people == 1 else 'people'} affected"
+                )
+                st.markdown(f"**Action:** {reason_text}")
+                st.caption(
+                    f"Transmission: {comm_badge(request.get('comm_status', 'pending'))}"
+                    f"  |  Response: {rescue_badge(request.get('rescue_status', 'open'))}"
+                )
+            with action_col:
+                if st.button(
+                    "Review",
+                    key=f"cc_attention_review_{request_id}",
+                    use_container_width=True,
+                ):
+                    # Clear filters so the incident is visible in the
+                    # dispatch panel even if a map filter had hidden it.
+                    for filter_key in (
+                        "cc_category", "cc_priority", "cc_comm", "cc_rescue"
+                    ):
+                        st.session_state[filter_key] = "All"
+
+                    st.session_state["cc_selected_request_id"] = request_id
+                    st.session_state["cc_incident_picker"] = (
+                        f"{request_id} · {score}pts ({priority}) - {category}"
+                    )
+                    st.rerun()
+
+    if len(items) > len(visible_items):
+        st.caption(
+            f"Showing the {len(visible_items)} most urgent items of {len(items)}. "
+            "Resolve or assign incidents to clear them from this queue."
+        )
+
+
 def _build_tactical_map(requests: list, teams: list, selected_req: dict = None, nearest_team: dict = None) -> folium.Map:
     """Build tactical geospatial map showing both active incidents and rescue responder units."""
     if requests:
@@ -121,6 +268,9 @@ def show() -> None:
         "ASTRA 2026 / DOMAIN 03 · DISASTER OPERATIONS",
     )
 
+    all_requests = get_all_requests()
+    _render_attention_queue(all_requests)
+
     with st.expander("Filter & Search Incidents", expanded=False):
         c1, c2, c3, c4 = st.columns(4)
         with c1:
@@ -138,7 +288,6 @@ def show() -> None:
                 "Response Status", ["All"] + RESCUE_STATUSES, key="cc_rescue"
             )
 
-    all_requests = get_all_requests()
     requests = get_all_requests({
         "category": category_filter,
         "priority": priority_filter,
