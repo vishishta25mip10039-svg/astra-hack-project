@@ -1,6 +1,7 @@
 """Command centre: incident map, request triage and team dispatch."""
 
 import json
+from datetime import datetime
 from html import escape
 from statistics import mean
 
@@ -261,11 +262,17 @@ def _build_tactical_map(requests: list, teams: list, selected_req: dict = None, 
     return map_view
 
 
+@st.fragment(run_every="10s")
 def show() -> None:
     page_header(
         "Operations Command Centre",
         "Geospatial emergency triage, automated nearest-team proximity matching and rescue dispatch.",
         "ASTRA 2026 / DOMAIN 03 · DISASTER OPERATIONS",
+    )
+
+    st.caption(
+        f"🟢 LIVE MAP · Database refresh every 10 seconds · "
+        f"Last updated {datetime.now().strftime('%H:%M:%S')}"
     )
 
     all_requests = get_all_requests()
