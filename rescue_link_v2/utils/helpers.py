@@ -37,6 +37,26 @@ PRIORITY_SOFT_COLORS = {
     "low": ("#F2EFE6", "#182B36"),
 }
 
+COMM_STATUS_BADGE = {
+    "pending": "Pending transmission",
+    "synchronised": "Synchronised",
+}
+
+RESCUE_STATUS_BADGE = {
+    "open": "Open",
+    "assigned": "Assigned",
+    "in_progress": "In progress",
+    "resolved": "Resolved",
+}
+
+CATEGORIES = [
+    "Flood", "Earthquake", "Landslide", "Fire",
+    "Medical Assistance", "Structural Collapse", "Other",
+]
+
+SEVERITIES = ["Low", "Moderate", "High", "Critical"]
+
+
 def apply_theme() -> None:
     """Apply a sleek, space-grade Dark Operations UI with neon orbital accents."""
     st.markdown(
