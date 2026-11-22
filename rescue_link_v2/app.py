@@ -81,7 +81,7 @@ with st.sidebar:
           <div class="rl-sidebar-status-row"><span>Uplink</span><span class="rl-sidebar-status-value">{link_label}</span></div>
           <div class="rl-sidebar-status-row"><span>Responders</span><span class="rl-sidebar-status-value">{team_label}</span></div>
           <div class="rl-sidebar-status-row"><span>Triage queue</span><span class="rl-sidebar-status-value">{metrics['total']} requests</span></div>
-          <div class="rl-sidebar-status-row"><span>Packet loss</span><span class="rl-sidebar-status-value" style="color:#75B99D">0.0% (Zero)</span></div>
+          <div class="rl-sidebar-status-row"><span>Packet loss</span><span class="rl-sidebar-status-value" >0.0% (Zero)</span></div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -106,7 +106,7 @@ with st.sidebar:
     pending_count = metrics["pending_transmission"]
     if pending_count > 0:
         st.markdown(
-            f"<div style='background:#78350F;border:1px solid #B45309;border-radius:6px;padding:6px 10px;margin-top:6px;font-size:11px;color:#FDE68A;font-weight:700'>"
+            f"<div style='background:rgba(242,239,230,.10);border:1px solid rgba(242,239,230,.38);border-radius:6px;padding:6px 10px;margin-top:6px;font-size:11px;color:#F2EFE6;font-weight:700'>"
             f"📦 {pending_count} pending in offline queue"
             f"</div>",
             unsafe_allow_html=True,
