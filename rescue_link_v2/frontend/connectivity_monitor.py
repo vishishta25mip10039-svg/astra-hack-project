@@ -88,14 +88,14 @@ def show() -> None:
             route_name = "Satellite Simulation (NavIC / Starlink Protocol)" if channel == "satellite_sim" else "Terrestrial Cellular / Internet"
             st.markdown(
                 f"{status_badge_html('Uplink Online', 'low')} "
-                f"<span style='color:#203244;font-size:14px;font-weight:700;margin-left:8px'>{route_name}</span>",
+                f"<span style='color:#F1F5F9;font-size:14px;font-weight:700;margin-left:8px'>{route_name}</span>",
                 unsafe_allow_html=True,
             )
             st.caption("New SOS requests will be transmitted and verified immediately.")
         else:
             st.markdown(
                 f"{status_badge_html('Network Blackout', 'critical')} "
-                f"<span style='color:#C84D50;font-size:14px;font-weight:700;margin-left:8px'>No Ground or Satellite Channel</span>",
+                f"<span style='color:#F87171;font-size:14px;font-weight:700;margin-left:8px'>No Ground or Satellite Channel</span>",
                 unsafe_allow_html=True,
             )
             st.caption("Store-and-Forward Active: New requests are securely queued in local SQLite.")
@@ -103,9 +103,9 @@ def show() -> None:
         # Satellite Telemetry Card
         st.markdown(
             f"""
-            <div style="background:#F6FAFC;border:1px solid #DCE5EC;border-radius:9px;padding:12px;margin-top:12px">
+            <div style="background:#0B111E;border:1px solid #1E2D42;border-radius:9px;padding:12px;margin-top:12px">
               <div style="display:flex;justify-content:space-between;align-items:center">
-                <span style="font-size:10px;font-weight:800;color:#576E82;letter-spacing:.08em;text-transform:uppercase">
+                <span style="font-size:10px;font-weight:800;color:#38BDF8;letter-spacing:.08em;text-transform:uppercase">
                   🛰️ Domain 04 Satellite Telemetry Feed
                 </span>
                 {status_badge_html('Transponder Ready' if telemetry['active'] else 'Transponder Standby', 'low' if telemetry['active'] else 'moderate')}

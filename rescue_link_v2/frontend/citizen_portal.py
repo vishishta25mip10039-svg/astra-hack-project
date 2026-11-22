@@ -154,12 +154,12 @@ def show() -> None:
                 f"""
                 <div class="rl-triage-box">
                   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-                    <span style="font-size:10px;font-weight:800;color:#576E82;letter-spacing:.08em;text-transform:uppercase">
+                    <span style="font-size:10px;font-weight:800;color:#38BDF8;letter-spacing:.08em;text-transform:uppercase">
                       ⚡ Slide 7 Priority Engine Live Preview
                     </span>
                     {score_badge_html(triage_preview['score'], triage_preview['tier'])}
                   </div>
-                  <div style="font-size:12px;color:#203244;font-weight:600">
+                  <div style="font-size:12px;color:#F1F5F9;font-weight:600">
                     Response Target: <span style="color:{triage_preview['color']}">{triage_preview['action']}</span> ({triage_preview['queue']})
                   </div>
                   <div style="margin-top:6px">

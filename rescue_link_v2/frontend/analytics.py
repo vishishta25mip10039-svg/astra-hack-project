@@ -11,24 +11,24 @@ from backend.db import seed_demo_data
 from utils.helpers import page_header, section_heading, PRIORITY_COLORS
 
 
-TEXT = "#344B5D"
-MUTED = "#718295"
-GRID = "#E3EAF0"
-BRAND = "#477F9E"
+TEXT = "#F1F5F9"
+MUTED = "#94A3B8"
+GRID = "#1E293B"
+BRAND = "#38BDF8"
 
 
 def _style_figure(fig, height: int = 310):
-    """Apply a high-contrast light theme to every analytics chart."""
+    """Apply a high-contrast dark space theme to every analytics chart."""
     fig.update_layout(
-        template="plotly_white",
-        paper_bgcolor="#FFFFFF",
-        plot_bgcolor="#FFFFFF",
+        template="plotly_dark",
+        paper_bgcolor="rgba(14, 22, 38, 0.6)",
+        plot_bgcolor="rgba(14, 22, 38, 0.6)",
         font={
             "family": "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
             "color": TEXT,
             "size": 12,
         },
-        title={"font": {"size": 15, "color": "#203244"}, "x": 0.025, "xanchor": "left"},
+        title={"font": {"size": 15, "color": "#F8FAFC"}, "x": 0.025, "xanchor": "left"},
         margin={"l": 24, "r": 18, "t": 54, "b": 30},
         height=height,
         legend={
@@ -43,17 +43,17 @@ def _style_figure(fig, height: int = 310):
         gridcolor=GRID,
         zeroline=False,
         title=None,
-        tickfont={"color": TEXT, "size": 11},
+        tickfont={"color": MUTED, "size": 11},
         title_font={"color": TEXT},
-        linecolor="#CAD5DE",
+        linecolor="#1E293B",
     )
     fig.update_yaxes(
         showgrid=False,
         zeroline=False,
         title=None,
-        tickfont={"color": TEXT, "size": 11},
+        tickfont={"color": MUTED, "size": 11},
         title_font={"color": TEXT},
-        linecolor="#CAD5DE",
+        linecolor="#1E293B",
     )
     return fig
 
